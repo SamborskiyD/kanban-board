@@ -69,19 +69,22 @@ const Board = () => {
   }
 
   function onDragEnd(event) {
-    const { active, over} = event
+    const { active, over } = event;
 
-    if(!over) return
+    if (!over) return;
 
-    const activeColumnIndex = columns.findIndex((column) => column.id === active.id)
-    const overColumnIndex = columns.findIndex((column) => column.id === over.id)
+    const activeColumnIndex = columns.findIndex(
+      (column) => column.id === active.id
+    );
+    const overColumnIndex = columns.findIndex(
+      (column) => column.id === over.id
+    );
 
-    if (activeColumnIndex === overColumnIndex) return
+    if (activeColumnIndex === overColumnIndex) return;
 
     setColumns((prev) => {
-      return arrayMove(prev, activeColumnIndex, overColumnIndex)
-    })
-
+      return arrayMove(prev, activeColumnIndex, overColumnIndex);
+    });
   }
 
   return (
@@ -114,18 +117,15 @@ const Board = () => {
           </SortableContext>
         </div>
 
-        {createPortal(
-          <DragOverlay>
-            {draggedColumn && (
-              <Column
-                column={draggedColumn}
-                tasks={tasks}
-                deleteColumn={deleteColumn}
-              />
-            )}
-          </DragOverlay>,
-          document.body
-        )}
+        <DragOverlay>
+          {draggedColumn && (
+            <Column
+              column={draggedColumn}
+              tasks={tasks}
+              deleteColumn={deleteColumn}
+            />
+          )}
+        </DragOverlay>
       </DndContext>
     </section>
   );
