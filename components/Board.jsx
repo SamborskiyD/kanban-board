@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo } from "react";
 import Column from "./Column";
 import {
@@ -7,20 +9,44 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { SortableContext } from "@dnd-kit/sortable";
+import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 
-const Board = ({
-  columns,
-  addNewColumn,
-  tasks,
-  addNewTask,
-  deleteColumn,
-  updateColumnTitle,
-}) => {
-  
+const Board = () => {
+  const [columns, setColumns] = useState([]);
+  const [tasks, setTasks] = useState([]);
+
+  function addNewColumn() {
+    const column = {
+      id: Math.floor(Math.random() * 100000),
+      title: "New Column",
+    };
+    setColumns((prev) => [...prev, column]);
+  }
+
+  function addNewTask(columnId) {
+    const task = { id: tasks.length, columnId: columnId, title: "New Task" };
+    setTasks((prev) => [...prev, task]);
+  }
+
+  function deleteColumn(columnId) {
+    setColumns((prev) => prev.filter((column) => column.id != columnId));
+    setTasks((prev) => prev.filter((task) => task.columnId != columnId));
+  }
+
+  function updateColumnTitle(columnId, title) {
+    setColumns((prev) =>
+      prev.map((column) => {
+        if (column.id === columnId) {
+          return { ...column, title: title };
+        }
+        return column;
+      })
+    );
+  }
+
   const columnsId = useMemo(
     () => columns.map((column) => column.id),
     [columns]
@@ -42,7 +68,21 @@ const Board = ({
     }
   }
 
-  function onDragEnd() {}
+  function onDragEnd(event) {
+    const { active, over} = event
+
+    if(!over) return
+
+    const activeColumnIndex = columns.findIndex((column) => column.id === active.id)
+    const overColumnIndex = columns.findIndex((column) => column.id === over.id)
+
+    if (activeColumnIndex === overColumnIndex) return
+
+    setColumns((prev) => {
+      return arrayMove(prev, activeColumnIndex, overColumnIndex)
+    })
+
+  }
 
   return (
     <section className="w-[80%]">
@@ -57,8 +97,9 @@ const Board = ({
         sensors={sensors}
         modifiers={[restrictToHorizontalAxis]}
         onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
       >
-        <div className="flex gap-5 overflow-scroll no-scrollbar">
+        <div className="flex gap-5 overflow-scroll pb-5">
           <SortableContext items={columnsId}>
             {columns?.map((column) => (
               <Column
@@ -76,7 +117,11 @@ const Board = ({
         {createPortal(
           <DragOverlay>
             {draggedColumn && (
-              <Column column={draggedColumn} tasks={tasks} deleteColumn={deleteColumn} />
+              <Column
+                column={draggedColumn}
+                tasks={tasks}
+                deleteColumn={deleteColumn}
+              />
             )}
           </DragOverlay>,
           document.body
