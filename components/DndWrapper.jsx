@@ -2,6 +2,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -22,6 +23,11 @@ const DndWrapper = ({columns, tasks, setColumns, setTasks, children }) => {
       activationConstraint: {
         distance: 5,
       },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        distance: 5
+      }
     })
   );
 

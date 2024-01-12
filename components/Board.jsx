@@ -66,7 +66,7 @@ const Board = () => {
           setColumns={setColumns}
           setTasks={setTasks}
         >
-          <div className="flex gap-5 overflow-scroll snap-x pb-5">
+          <div className="flex gap-5 overflow-scroll snap-x scroll-smooth pb-5">
             <SortableContext items={columnsId}>
               {columns?.map((column) => (
                 <Column
