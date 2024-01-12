@@ -12,7 +12,7 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { useState } from "react";
-import { createPortal } from "react-dom";
+import Card from "./Card";
 
 const Board = () => {
   const [columns, setColumns] = useState([]);
@@ -27,7 +27,7 @@ const Board = () => {
   }
 
   function addNewTask(columnId) {
-    const task = { id: tasks.length, columnId: columnId, title: "New Task" };
+    const task = { id: tasks.length+1, columnId: columnId, title: "New Task" };
     setTasks((prev) => [...prev, task]);
   }
 
@@ -47,12 +47,12 @@ const Board = () => {
     );
   }
 
-  const columnsId = useMemo(
-    () => columns.map((column) => column.id),
-    [columns]
-  );
+  // DND functions
+
+  const columnsId = useMemo(() => columns.map((column) => column.id), [columns]);
 
   const [draggedColumn, setDraggedColumn] = useState({});
+  const [draggedTask, setDraggedTask] = useState({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -65,13 +65,22 @@ const Board = () => {
   function onDragStart(event) {
     if (event.active.data.current?.type === "Column") {
       setDraggedColumn(event.active.data.current?.column);
+      return
+    }
+    else if (event.active.data.current?.type === "Task") {
+      setDraggedTask(event.active.data.current?.task);
+      return
     }
   }
 
   function onDragEnd(event) {
+    setDraggedColumn(null)
+    setDraggedTask(null)
+
     const { active, over } = event;
 
     if (!over) return;
+    if (active.data.current?.type !== "Column") return;
 
     const activeColumnIndex = columns.findIndex(
       (column) => column.id === active.id
@@ -87,6 +96,40 @@ const Board = () => {
     });
   }
 
+  function onDragOver(event) {
+    const { active, over } = event;
+
+    if (!over) return
+
+    const isActiveElemATask = active.data.current?.type === "Task"
+    const isOverElemATask = over.data.current?.type === "Task"
+    const isOverElemAColumn = over.data.current?.type === "Column"
+
+    if(!isActiveElemATask) return
+
+    const activeElemIndex = tasks.findIndex(
+      (task) => task.id === active.id
+    );
+    const overElemIndex = tasks.findIndex(
+      (task) => task.id === over.id
+    );
+
+    if (isActiveElemATask && isOverElemATask) {
+      setTasks((prev) => {
+        prev[activeElemIndex].columnId = prev[overElemIndex].columnId
+        return arrayMove(prev, activeElemIndex, overElemIndex)
+      })
+    }
+
+    else if (isActiveElemATask && isOverElemAColumn) {
+      setTasks((prev) => {
+        prev[activeElemIndex].columnId = over.id
+        return arrayMove(prev, activeElemIndex, activeElemIndex)
+      })
+    }
+    
+  }
+
   return (
     <section className="w-[80%]">
       <button
@@ -98,9 +141,9 @@ const Board = () => {
 
       <DndContext
         sensors={sensors}
-        modifiers={[restrictToHorizontalAxis]}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onDragOver={onDragOver}
       >
         <div className="flex gap-5 overflow-scroll pb-5">
           <SortableContext items={columnsId}>
@@ -123,6 +166,11 @@ const Board = () => {
               column={draggedColumn}
               tasks={tasks}
               deleteColumn={deleteColumn}
+            />
+          )}
+          {draggedTask && (
+            <Card
+              task={draggedTask}
             />
           )}
         </DragOverlay>

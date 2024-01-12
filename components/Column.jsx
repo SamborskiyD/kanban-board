@@ -1,8 +1,8 @@
 import React from "react";
 import Card from "./Card";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TrashIcon, EditIcon, SaveIcon } from "./icons";
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 const Column = ({
@@ -12,8 +12,9 @@ const Column = ({
   deleteColumn,
   updateColumnTitle,
 }) => {
-  
   const [editMode, setEditMode] = useState(false);
+
+  const tasksId = useMemo(() => tasks.map((task) => task.id), [tasks]);
 
   const {
     setNodeRef,
@@ -28,6 +29,7 @@ const Column = ({
       type: "Column",
       column,
     },
+    disabled: editMode,
   });
 
   const columnDragStyle = {
@@ -49,11 +51,13 @@ const Column = ({
     <div
       ref={setNodeRef}
       style={columnDragStyle}
-      {...attributes}
-      {...listeners}
       className="w-full min-w-[300px] max-w-[600px] min-h-[70vh] max-h-[70vh] flex flex-col justify-between bg-black2 p-4 rounded-lg"
     >
-      <div className=" mb-4 flex justify-between items-center gap-10">
+      <div
+        {...attributes}
+        {...listeners}
+        className=" mb-4 flex justify-between items-center gap-10 cursor-grab"
+      >
         {editMode ? (
           <input
             type="text"
@@ -78,13 +82,15 @@ const Column = ({
         </div>
       </div>
 
-      <div className="flex flex-col h-full gap-3 overflow-y-scroll pr-2">
-        {tasks
-          ?.filter((task) => task.columnId == column.id)
-          .map((task, index) => (
-            <Card key={index} {...task} />
-          ))}
-      </div>
+      <SortableContext items={tasksId}>
+        <div className="flex flex-col h-full gap-3 overflow-y-scroll pr-2">
+          {tasks
+            ?.filter((task) => task.columnId == column.id)
+            .map((task, index) => (
+              <Card key={index} task={task} />
+            ))}
+        </div>
+      </SortableContext>
 
       <button className="violet-button" onClick={() => addNewTask(column.id)}>
         Add new task
