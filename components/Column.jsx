@@ -51,7 +51,7 @@ const Column = ({
     <div
       ref={setNodeRef}
       style={columnDragStyle}
-      className="w-full min-w-[300px] max-w-[600px] min-h-[70vh] max-h-[70vh] flex flex-col justify-between bg-black2 p-4 rounded-lg"
+      className="w-full min-w-[300px] max-w-[600px] min-h-[70vh] max-h-[70vh] snap-center flex flex-col justify-between bg-black2 p-4 rounded-lg"
     >
       <div
         {...attributes}
